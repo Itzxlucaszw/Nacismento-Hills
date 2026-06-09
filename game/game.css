@@ -1,0 +1,80 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background-image: url("../assets.game/background/ChatGPT\ Image\ 9\ de\ jun.\ de\ 2026\,\ 19_58_29.png");
+    background-repeat: repeat;
+}
+
+/* Canvas */
+#gameCanvas{
+    display:block;
+}
+
+/* HUD */
+
+#hud{
+    position:absolute;
+    top:20px;
+    left:20px;
+    z-index:100;
+}
+
+#vidaContainer{
+    width:250px;
+    height:25px;
+
+    background:#333;
+
+    border:2px solid white;
+}
+
+#vida{
+    width:100%;
+    height:100%;
+
+    background:red;
+}
+
+#textoVida{
+    color:white;
+    margin-top:5px;
+}
+
+/* Pause */
+
+#pauseMenu{
+
+    position:absolute;
+
+    top:0;
+    left:0;
+
+    width:100%;
+    height:100%;
+
+    background:rgba(0,0,0,0.8);
+
+    display:none;
+
+    justify-content:center;
+    align-items:center;
+
+    flex-direction:column;
+
+    color:white;
+
+    z-index:999;
+}
+
+#pauseMenu button{
+
+    margin-top:20px;
+
+    padding:15px 30px;
+
+    cursor:pointer;
+}
