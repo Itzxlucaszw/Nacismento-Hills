@@ -192,8 +192,14 @@ function gerarColisoesMapa0() {
         // ── Porta dupla (topo centro) - bloqueada inicialmente ──
         // (será substituída pela zona interativa)
 
-        // ── Balcão de recepção (em U) ──
-        
+        // lado esquerdo
+        px(300, 431, 75, 170),
+
+        // lado direito
+        px(515, 431, 75, 150),
+
+        // parte de baixo
+        px(300, 550, 250, 115),
 
         // ── Cadeiras/sofás esquerda ──
         px(55,   555,  100,  160),
@@ -266,6 +272,7 @@ const MAPAS = [
         nome: "Recepção",
         fundo: "../assets.game/background/recepcao.png",
         get colisoes() { return gerarColisoesMapa0(); },
+
         inimigos: [
             {
                 // Infectado no centro-baixo da recepção
