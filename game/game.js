@@ -187,13 +187,13 @@ function gerarColisoesMapa0() {
         px(0,    0,    896,  70),    // topo
         px(0,    1270, 896,  74),    // base
         px(0,    0,    95,   1344),  // esquerda
-        px(800,  0,    96,   1344),  // direita
+        px(800,  0,    96,   1344),  // direitaaaas
 
         // ── Porta dupla (topo centro) - bloqueada inicialmente ──
         // (será substituída pela zona interativa)
 
         // ── Balcão de recepção (em U) ──
-        px(252,  385,  392,  240),   // corpo do balcão
+        
 
         // ── Cadeiras/sofás esquerda ──
         px(55,   555,  100,  160),
@@ -264,7 +264,7 @@ const MAPAS = [
     // ── MAPA 0: Recepção ──
     {
         nome: "Recepção",
-        fundo: "/assets.game/background/recepcao.png",
+        fundo: "../assets.game/background/recepcao.png",
         get colisoes() { return gerarColisoesMapa0(); },
         inimigos: [
             {
@@ -294,7 +294,7 @@ const MAPAS = [
     // ── MAPA 1: Corredor ──
     {
         nome: "Corredor",
-        fundo: "/assets.game/background/Corredor_kkk2.png",
+        fundo: "../assets.game/background/Corredor_kkk2.png",
         get colisoes() { return gerarColisoesMapa1(); },
         inimigos: [
             { xPct: 0.45, yPct: 0.50, largura: 28, altura: 28, velocidade: 1.0,
@@ -327,7 +327,7 @@ const MAPAS = [
     // ── MAPA 2: Corredor da Saída ──
     {
         nome: "Corredor da Saída",
-        fundo: "/assets.game/background/Corredor_da_saida.png",
+        fundo: "../assets.game/background/Corredor_da_saida.png",
         get colisoes() { return gerarColisoesMapa2(); },
         inimigos: [
             { xPct: 0.40, yPct: 0.40, largura: 28, altura: 28, velocidade: 1.3,
@@ -358,7 +358,7 @@ const MAPAS = [
     // ── MAPA 3: Quarto do João ──
     {
         nome: "Quarto do João",
-        fundo: "/assets.game/background/Quarto_do_Joao_com_cartao.png",
+        fundo: "../assets.game/background/Quarto_do_Joao_com_cartao.png",
         get colisoes() { return gerarColisoesMapa3(); },
         inimigos: [],
         portas: [
@@ -505,11 +505,27 @@ function interagir() {
 // --------------------------------
 
 function atualizarInimigos() {
+    const cols = MAPAS[mapaAtualIdx].colisoes;
     for (let i = inimigosAtivos.length - 1; i >= 0; i--) {
         const ini = inimigosAtivos[i];
         const dx = jogador.x - ini.x, dy = jogador.y - ini.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > 0) { ini.x += (dx / dist) * ini.velocidade; ini.y += (dy / dist) * ini.velocidade; }
+        if (dist > 0) {
+            let nx = ini.x + (dx / dist) * ini.velocidade;
+            let ny = ini.y + (dy / dist) * ini.velocidade;
+
+            const testX = { x: nx, y: ini.y, largura: ini.largura, altura: ini.altura };
+            const testY = { x: ini.x, y: ny, largura: ini.largura, altura: ini.altura };
+
+            let colX = false, colY = false;
+            for (const c of cols) {
+                if (colidindo(testX, c)) colX = true;
+                if (colidindo(testY, c)) colY = true;
+            }
+
+            if (!colX) ini.x = nx;
+            if (!colY) ini.y = ny;
+        }
         if (ini.tempoDano > 0) ini.tempoDano--;
 
         if (colidindo(jogador, ini) && ini.tempoDano <= 0) {
