@@ -19,7 +19,7 @@ window.addEventListener("resize", () => {
 
 let pausado = false;
 let transicionando = false;
-let debugColisoes = false; // muda para true para ver as colisões
+let debugColisoes = false;
 
 // --------------------------------
 // FADE
@@ -54,9 +54,8 @@ function desenharFade() {
 }
 
 // --------------------------------
-// HELPER: converter % da imagem para pixels do canvas
+// HELPER: converter coordenadas da imagem para pixels do canvas
 // A imagem da recepção é 896x1344
-// Usamos proporção para que funcione em qualquer resolução
 // --------------------------------
 
 function px(xPct, yPct, wPct, hPct) {
@@ -70,14 +69,20 @@ function px(xPct, yPct, wPct, hPct) {
 
 // --------------------------------
 // JOGADOR
+// ── CORREÇÃO: adicionados frame e direcao que estavam faltando ──
 // --------------------------------
 
 const jogador = {
     x: 0, y: 0,
-    largura: 28, altura: 28,
+    largura: 80, altura: 80,
     velocidade: 3,
     vida: 100, vidaMax: 100,
     cor: "#00aaff",
+
+    // Animação do sprite
+    frame: 0,       // coluna no spritesheet (0–3)
+    direcao: 0,     // linha no spritesheet (0=baixo, 1=cima, 2=esq, 3=dir)
+
     atacando: false,
     tempoAtaque: 0,
     tempoAniAtaque: 0,
@@ -116,6 +121,7 @@ function desenharEfeitos() {
 
 // --------------------------------
 // TECLAS
+// ── CORREÇÃO: removido bloco solto que causava ReferenceError ──
 // --------------------------------
 
 const teclas = {};
@@ -178,72 +184,45 @@ function distancia(a, b) {
 
 // --------------------------------
 // MAPAS
-// Colisões da recepção mapeadas pixel a pixel na imagem 896x1344
 // --------------------------------
 
 function gerarColisoesMapa0() {
     return [
-        // ── Bordas da sala (área preta ao redor) ──
-        px(0,    0,    896,  70),    // topo
-        px(0,    1300, 996,  100),    // base
-        px(0,    0,    95,   1344),  // esquerda
-        px(800,  0,    96,   1344),  // direita
+        px(0,    0,    896,  70),
+        px(0,    1300, 996,  100),
+        px(0,    0,    95,   1344),
+        px(800,  0,    96,   1344),
 
-        // ── Porta dupla (topo centro) - bloqueada inicialmente ──
-        // (será substituída pela zona interativa)
         px(150, 200, 900, 60),
 
-        // lado esquerdo
         px(300, 431, 75, 180),
-
-        // lado direito
         px(515, 431, 75, 180),
-
-        // parte de baixo
         px(300, 500, 285, 125),
 
-        // ── Cadeiras/sofás esquerda ──
         px(100,   630,  50,  170),
-
-        // ── Armário/objeto direita ──
         px(720,  975,  70,   175),
-
-        // ── caidera de rodas ──
         px(720, 720, 70, 75),
 
-        // ── Vaso/planta canto superior esquerdo ──
         px(95,   195,  65,   80),
-
-        // ── Vaso/planta canto superior direito ──
         px(730,  195,  65,   80),
-
-        // ── Vaso/planta canto inferior direito ──
         px(575, 1200, 50, 75),
-
-         // ── Vaso/planta canto inferior direito ──
         px(265, 1200, 50, 75),
-        
-        // ── Parede interna esquerda baixo (chanfro) ──
+
         px(0,    1245, 250,  120),
-
-        // ── Parede interna direita baixo (chanfro) ──
         px(650,  1245, 250,  120),
-
     ];
 }
 
 function gerarColisoesMapa1() {
-    // Corredor_kkk2 (horizontal) - imagem ~1366x768
     return [
-        { x: 0,    y: 0,   largura: canvas.width, altura: canvas.height * 0.17 },  // topo
-        { x: 0,    y: canvas.height * 0.82, largura: canvas.width, altura: canvas.height * 0.18 }, // base
-        { x: 0,    y: 0,   largura: canvas.width * 0.05, altura: canvas.height }, // esquerda
-        { x: canvas.width * 0.95, y: 0, largura: canvas.width * 0.05, altura: canvas.height }, // direita
+        { x: 0,    y: 0,   largura: canvas.width, altura: canvas.height * 0.17 },
+        { x: 0,    y: canvas.height * 0.82, largura: canvas.width, altura: canvas.height * 0.18 },
+        { x: 0,    y: 0,   largura: canvas.width * 0.05, altura: canvas.height },
+        { x: canvas.width * 0.95, y: 0, largura: canvas.width * 0.05, altura: canvas.height },
     ];
 }
 
 function gerarColisoesMapa2() {
-    // Corredor_da_saida (vertical)
     return [
         { x: 0,   y: 0,   largura: canvas.width, altura: canvas.height * 0.05 },
         { x: 0,   y: canvas.height * 0.95, largura: canvas.width, altura: canvas.height * 0.05 },
@@ -253,33 +232,25 @@ function gerarColisoesMapa2() {
 }
 
 function gerarColisoesMapa3() {
-    // Quarto do João - imagem ~1024x1024
     return [
         { x: 0,   y: 0,   largura: canvas.width, altura: canvas.height * 0.06 },
         { x: 0,   y: canvas.height * 0.93, largura: canvas.width, altura: canvas.height * 0.07 },
         { x: 0,   y: 0,   largura: canvas.width * 0.06, altura: canvas.height },
         { x: canvas.width * 0.94, y: 0, largura: canvas.width * 0.06, altura: canvas.height },
-        // Cama direita
         { x: canvas.width * 0.62, y: canvas.height * 0.11, largura: canvas.width * 0.32, altura: canvas.height * 0.40 },
-        // Escrivaninha esquerda baixo
         { x: canvas.width * 0.06, y: canvas.height * 0.55, largura: canvas.width * 0.22, altura: canvas.height * 0.18 },
-        // Armário esquerda
         { x: canvas.width * 0.06, y: canvas.height * 0.28, largura: canvas.width * 0.18, altura: canvas.height * 0.22 },
-        // Banheiro canto superior esquerdo
         { x: canvas.width * 0.06, y: canvas.height * 0.06, largura: canvas.width * 0.21, altura: canvas.height * 0.20 },
     ];
 }
 
 const MAPAS = [
-
-    // ── MAPA 0: Recepção ──
     {
         nome: "Recepção",
         fundo: "../assets/game/background/recepcao.png",
         get colisoes() { return gerarColisoesMapa0(); },
         inimigos: [
             {
-                // Infectado no centro-baixo da recepção
                 xPct: 0.48, yPct: 0.65,
                 largura: 28, altura: 28,
                 velocidade: 0.8,
@@ -289,20 +260,16 @@ const MAPAS = [
         ],
         portas: [
             {
-                // Porta dupla no topo — zona interativa
                 get x()       { return canvas.width  * 0.355; },
                 get y()       { return canvas.height * 0.068; },
                 get largura() { return canvas.width  * 0.215; },
                 get altura()  { return canvas.height * 0.060; },
                 label: "[E] Corredor",
                 destinoMapa: 1,
-                destinoX: null, destinoY: null, // calculado em carregarMapa
                 destinoXPct: 0.12, destinoYPct: 0.50,
             },
         ],
     },
-
-    // ── MAPA 1: Corredor ──
     {
         nome: "Corredor",
         fundo: "../assets/game/background/Corredor_kkk2.png",
@@ -334,11 +301,9 @@ const MAPAS = [
             },
         ],
     },
-
-    // ── MAPA 2: Corredor da Saída ──
     {
         nome: "Corredor da Saída",
-        fundo: "../assets/game/background/Corredor_da_saida.png",
+        fundo: "../assets/game/background/CorredorBoss.png",
         get colisoes() { return gerarColisoesMapa2(); },
         inimigos: [
             { xPct: 0.40, yPct: 0.40, largura: 28, altura: 28, velocidade: 1.3,
@@ -365,8 +330,6 @@ const MAPAS = [
             },
         ],
     },
-
-    // ── MAPA 3: Quarto do João ──
     {
         nome: "Quarto do João",
         fundo: "../assets/game/background/Quarto_do_Joao_com_cartao.png",
@@ -402,7 +365,6 @@ function carregarMapa(idx, xPct, yPct) {
     jogador.x = (xPct ?? 0.5) * canvas.width;
     jogador.y = (yPct ?? 0.5) * canvas.height;
 
-    // Cópia fresca dos inimigos com posição em % do canvas
     inimigosAtivos = mapa.inimigos.map(ini => ({
         ...ini,
         x: ini.xPct * canvas.width,
@@ -419,16 +381,19 @@ function carregarMapa(idx, xPct, yPct) {
 
 // --------------------------------
 // MOVIMENTAÇÃO COM COLISÃO
+// ── CORREÇÃO: direção atualizada aqui, onde nx/ny existem ──
 // --------------------------------
 
 function moverJogador() {
     const cols = MAPAS[mapaAtualIdx].colisoes;
     let nx = jogador.x, ny = jogador.y;
 
-    if (teclas["w"] || teclas["W"] || teclas["ArrowUp"])    ny -= jogador.velocidade;
-    if (teclas["s"] || teclas["S"] || teclas["ArrowDown"])  ny += jogador.velocidade;
-    if (teclas["a"] || teclas["A"] || teclas["ArrowLeft"])  nx -= jogador.velocidade;
-    if (teclas["d"] || teclas["D"] || teclas["ArrowRight"]) nx += jogador.velocidade;
+    // Direções batem com as linhas do spritesheet:
+    // 0 = baixo (frente) | 1 = cima (costas) | 2 = esquerda | 3 = direita
+    if (teclas["w"] || teclas["W"] || teclas["ArrowUp"])    { ny -= jogador.velocidade; jogador.direcao = 1; }
+    if (teclas["s"] || teclas["S"] || teclas["ArrowDown"])  { ny += jogador.velocidade; jogador.direcao = 0; }
+    if (teclas["a"] || teclas["A"] || teclas["ArrowLeft"])  { nx -= jogador.velocidade; jogador.direcao = 2; }
+    if (teclas["d"] || teclas["D"] || teclas["ArrowRight"]) { nx += jogador.velocidade; jogador.direcao = 3; }
 
     const testX = { x: nx, y: jogador.y, largura: jogador.largura, altura: jogador.altura };
     const testY = { x: jogador.x, y: ny, largura: jogador.largura, altura: jogador.altura };
@@ -543,7 +508,10 @@ function atualizarInimigos() {
             if (jogador.parryAtivo) {
                 ini.vida -= 40;
                 adicionarEfeito(ini.x + 14, ini.y - 10, "PARRY +40!", "#00ffff");
-                if (ini.vida <= 0) { adicionarEfeito(ini.x + 14, ini.y - 20, "MORTO", "orange"); inimigosAtivos.splice(i, 1); }
+                if (ini.vida <= 0) {
+                    adicionarEfeito(ini.x + 14, ini.y - 20, "MORTO", "orange");
+                    inimigosAtivos.splice(i, 1);
+                }
                 ini.tempoDano = 40;
                 jogador.parryAtivo = false;
             } else if (!jogador.invencivel) {
@@ -583,6 +551,32 @@ function atualizarCooldowns() {
 }
 
 // --------------------------------
+// ANIMAÇÃO DO SPRITE
+// --------------------------------
+
+let contadorAnimacao = 0;
+const VELOCIDADE_ANI = 10; // troca de frame a cada 10 ticks (~167ms a 60fps)
+
+function atualizarAnimacao() {
+    const andando =
+        teclas["w"] || teclas["W"] || teclas["ArrowUp"]    ||
+        teclas["a"] || teclas["A"] || teclas["ArrowLeft"]  ||
+        teclas["s"] || teclas["S"] || teclas["ArrowDown"]  ||
+        teclas["d"] || teclas["D"] || teclas["ArrowRight"];
+
+    if (andando) {
+        contadorAnimacao++;
+        if (contadorAnimacao >= VELOCIDADE_ANI) {
+            contadorAnimacao = 0;
+            jogador.frame = (jogador.frame + 1) % 4;
+        }
+    } else {
+        jogador.frame = 0;
+        contadorAnimacao = 0;
+    }
+}
+
+// --------------------------------
 // DESENHO
 // --------------------------------
 
@@ -607,7 +601,6 @@ function desenharDebugColisoes() {
         ctx.fillRect(c.x, c.y, c.largura, c.altura);
         ctx.strokeRect(c.x, c.y, c.largura, c.altura);
     }
-    // Portas em verde
     const mapa = MAPAS[mapaAtualIdx];
     ctx.strokeStyle = "rgba(0,255,0,0.8)";
     ctx.fillStyle   = "rgba(0,255,0,0.2)";
@@ -625,14 +618,42 @@ function desenharPortas() {
     ctx.fillStyle = "yellow";
     ctx.font = "14px Arial";
     ctx.textAlign = "left";
-    ctx.fillText(p.label, p.x, p.y - 12);          
+    ctx.fillText(p.label, p.x, p.y - 12);
 }
 
-// SPRITE DO JOGADOR
+// ── Sprite do jogador ──
+// Spritesheet 1254x1254 → 4 colunas x 4 linhas = 313x313px por frame
+// Linha 0=baixo | 1=cima | 2=esquerda | 3=direita
+const FRAME_W = 313;
+const FRAME_H = 313;
+
 const spriteJogador = new Image();
+let spriteProcessado = null; // versão sem fundo branco
+
+spriteJogador.onload = () => {
+    // Remove o fundo branco uma única vez ao carregar
+    const off = document.createElement("canvas");
+    off.width  = spriteJogador.width;
+    off.height = spriteJogador.height;
+    const octx = off.getContext("2d");
+    octx.drawImage(spriteJogador, 0, 0);
+    const imgData = octx.getImageData(0, 0, off.width, off.height);
+    const d = imgData.data;
+    for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i+1], b = d[i+2];
+        // Xadrez (cinza claro) e branco → transparente
+        // O padrão xadrez do PNG tem ~190-255 de brilho em R,G,B
+        const brilho = (r + g + b) / 3;
+        const saturacao = Math.max(r,g,b) - Math.min(r,g,b);
+        if (brilho > 180 && saturacao < 30) d[i+3] = 0;
+    }
+    octx.putImageData(imgData, 0, 0);
+    spriteProcessado = off;
+};
 spriteJogador.src = "../assets/game/sprites/player/andando/personagem.png";
 
 function desenharJogador() {
+    // Anel de parry
     if (jogador.parryAtivo) {
         ctx.strokeStyle = "#00ffff";
         ctx.lineWidth = 3;
@@ -640,33 +661,41 @@ function desenharJogador() {
         ctx.arc(
             jogador.x + jogador.largura / 2,
             jogador.y + jogador.altura / 2,
-            30,
-            0,
-            Math.PI * 2
+            30, 0, Math.PI * 2
         );
         ctx.stroke();
     }
 
+    // Flash de ataque
     if (jogador.tempoAniAtaque > 0) {
         ctx.fillStyle = "rgba(255,255,0,0.20)";
         ctx.fillRect(
-            jogador.x - 30,
-            jogador.y - 30,
-            jogador.largura + 60,
-            jogador.altura + 60
+            jogador.x - 30, jogador.y - 30,
+            jogador.largura + 60, jogador.altura + 60
         );
     }
 
-    if (jogador.invencivel &&
-        Math.floor(Date.now() / 80) % 2 === 0) return;
+    // Pisca quando invencível
+    if (jogador.invencivel && Math.floor(Date.now() / 80) % 2 === 0) return;
 
-    ctx.drawImage(
-    spriteJogador,
-    jogador.x,
-    jogador.y,
-    jogador.largura,
-    jogador.altura
-    );
+    const fonte = spriteProcessado || (spriteJogador.complete && spriteJogador.naturalWidth > 0 ? spriteJogador : null);
+    if (fonte) {
+        // Desenha exatamente 1 frame (313x313) na posição da hitbox
+        // centralizado: desloca metade da diferença entre frame e hitbox
+        const dstX = jogador.x - (FRAME_W - jogador.largura) / 2;
+        const dstY = jogador.y - (FRAME_H - jogador.altura)  / 2;
+        ctx.drawImage(
+            fonte,
+            jogador.frame   * FRAME_W,
+            jogador.direcao * FRAME_H,
+            FRAME_W, FRAME_H,
+            dstX, dstY,
+            FRAME_W, FRAME_H
+        );
+    } else {
+        ctx.fillStyle = jogador.cor;
+        ctx.fillRect(jogador.x, jogador.y, jogador.largura, jogador.altura);
+    }
 }
 
 function desenharInimigos() {
@@ -724,13 +753,14 @@ function gameOver() {
 }
 
 // --------------------------------
-// LOOP
+// LOOP PRINCIPAL
 // --------------------------------
 
 function update() {
     atualizarFade();
     if (pausado || transicionando) return;
     moverJogador();
+    atualizarAnimacao();   // ── CORREÇÃO: estava faltando no update ──
     atualizarInimigos();
     atualizarCooldowns();
     atualizarEfeitos();
@@ -756,5 +786,5 @@ function loop() { update(); draw(); requestAnimationFrame(loop); }
 // --------------------------------
 // INICIAR
 // --------------------------------
-carregarMapa(0, 0.48, 0.88); // começa em baixo na recepção (entrada Bem-vindo)
+carregarMapa(0, 0.48, 0.88);
 loop();
