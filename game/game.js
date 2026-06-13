@@ -185,27 +185,31 @@ function gerarColisoesMapa0() {
     return [
         // ── Bordas da sala (área preta ao redor) ──
         px(0,    0,    896,  70),    // topo
-        px(0,    1270, 896,  74),    // base
+        px(0,    1300, 996,  100),    // base
         px(0,    0,    95,   1344),  // esquerda
-        px(800,  0,    96,   1344),  // direitaaaas
+        px(800,  0,    96,   1344),  // direita
 
         // ── Porta dupla (topo centro) - bloqueada inicialmente ──
         // (será substituída pela zona interativa)
+        px(150, 200, 900, 60),
 
         // lado esquerdo
-        px(300, 431, 75, 170),
+        px(300, 431, 75, 180),
 
         // lado direito
-        px(515, 431, 75, 150),
+        px(515, 431, 75, 180),
 
         // parte de baixo
-        px(300, 550, 250, 115),
+        px(300, 500, 285, 125),
 
         // ── Cadeiras/sofás esquerda ──
-        px(55,   555,  100,  160),
+        px(100,   630,  50,  170),
 
         // ── Armário/objeto direita ──
-        px(718,  545,  80,   130),
+        px(720,  975,  70,   175),
+
+        // ── caidera de rodas ──
+        px(720, 720, 70, 75),
 
         // ── Vaso/planta canto superior esquerdo ──
         px(95,   195,  65,   80),
@@ -213,17 +217,18 @@ function gerarColisoesMapa0() {
         // ── Vaso/planta canto superior direito ──
         px(730,  195,  65,   80),
 
-        // ── Parede interna esquerda (chanfro) ──
-        px(0,    70,   140,  130),
+        // ── Vaso/planta canto inferior direito ──
+        px(575, 1200, 50, 75),
 
-        // ── Parede interna direita (chanfro) ──
-        px(755,  70,   141,  130),
-
+         // ── Vaso/planta canto inferior direito ──
+        px(265, 1200, 50, 75),
+        
         // ── Parede interna esquerda baixo (chanfro) ──
-        px(0,    1150, 140,  120),
+        px(0,    1245, 250,  120),
 
         // ── Parede interna direita baixo (chanfro) ──
-        px(755,  1150, 141,  120),
+        px(650,  1245, 250,  120),
+
     ];
 }
 
@@ -272,7 +277,6 @@ const MAPAS = [
         nome: "Recepção",
         fundo: "../assets.game/background/recepcao.png",
         get colisoes() { return gerarColisoesMapa0(); },
-
         inimigos: [
             {
                 // Infectado no centro-baixo da recepção
@@ -562,7 +566,7 @@ function verificarPortas() {
     const mapa = MAPAS[mapaAtualIdx];
     portaProxima = null;
     for (const porta of mapa.portas) {
-        if (distancia(jogador, porta) < 90) { portaProxima = porta; break; }
+        if (distancia(jogador, porta) < 150) { portaProxima = porta; break; }
     }
 }
 
@@ -624,21 +628,45 @@ function desenharPortas() {
     ctx.fillText(p.label, p.x, p.y - 12);
 }
 
+// SPRITE DO JOGADOR
+const spriteJogador = new Image();
+spriteJogador.src = "../assets.game/sprites/player/personagem.png";
+
 function desenharJogador() {
     if (jogador.parryAtivo) {
         ctx.strokeStyle = "#00ffff";
-        ctx.lineWidth   = 3;
+        ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.arc(jogador.x + jogador.largura / 2, jogador.y + jogador.altura / 2, 30, 0, Math.PI * 2);
+        ctx.arc(
+            jogador.x + jogador.largura / 2,
+            jogador.y + jogador.altura / 2,
+            30,
+            0,
+            Math.PI * 2
+        );
         ctx.stroke();
     }
+
     if (jogador.tempoAniAtaque > 0) {
         ctx.fillStyle = "rgba(255,255,0,0.20)";
-        ctx.fillRect(jogador.x - 30, jogador.y - 30, jogador.largura + 60, jogador.altura + 60);
+        ctx.fillRect(
+            jogador.x - 30,
+            jogador.y - 30,
+            jogador.largura + 60,
+            jogador.altura + 60
+        );
     }
-    if (jogador.invencivel && Math.floor(Date.now() / 80) % 2 === 0) return;
-    ctx.fillStyle = jogador.cor;
-    ctx.fillRect(jogador.x, jogador.y, jogador.largura, jogador.altura);
+
+    if (jogador.invencivel &&
+        Math.floor(Date.now() / 80) % 2 === 0) return;
+
+    ctx.drawImage(
+        spriteJogador,
+        jogador.x,
+        jogador.y,
+        jogador.largura,
+        jogador.altura
+    );
 }
 
 function desenharInimigos() {
