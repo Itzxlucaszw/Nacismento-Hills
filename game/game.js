@@ -657,10 +657,8 @@ function desenharJogador() {
         );
     }
 
-    if (
-        jogador.invencivel &&
-        Math.floor(Date.now() / 80) % 2 === 0
-    ) return;
+    if (jogador.invencivel &&
+        Math.floor(Date.now() / 80) % 2 === 0) return;
 
     ctx.drawImage(
     spriteJogador,
@@ -668,7 +666,7 @@ function desenharJogador() {
     jogador.y,
     jogador.largura,
     jogador.altura
-);
+    );
 }
 
 function desenharInimigos() {
