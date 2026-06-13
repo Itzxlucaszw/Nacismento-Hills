@@ -275,7 +275,7 @@ const MAPAS = [
     // ── MAPA 0: Recepção ──
     {
         nome: "Recepção",
-        fundo: "../assets.game/background/recepcao.png",
+        fundo: "../assets/game/background/recepcao.png",
         get colisoes() { return gerarColisoesMapa0(); },
         inimigos: [
             {
@@ -305,7 +305,7 @@ const MAPAS = [
     // ── MAPA 1: Corredor ──
     {
         nome: "Corredor",
-        fundo: "../assets.game/background/Corredor_kkk2.png",
+        fundo: "../assets/game/background/Corredor_kkk2.png",
         get colisoes() { return gerarColisoesMapa1(); },
         inimigos: [
             { xPct: 0.45, yPct: 0.50, largura: 28, altura: 28, velocidade: 1.0,
@@ -338,7 +338,7 @@ const MAPAS = [
     // ── MAPA 2: Corredor da Saída ──
     {
         nome: "Corredor da Saída",
-        fundo: "../assets.game/background/Corredor_da_saida.png",
+        fundo: "../assets/game/background/Corredor_da_saida.png",
         get colisoes() { return gerarColisoesMapa2(); },
         inimigos: [
             { xPct: 0.40, yPct: 0.40, largura: 28, altura: 28, velocidade: 1.3,
@@ -369,7 +369,7 @@ const MAPAS = [
     // ── MAPA 3: Quarto do João ──
     {
         nome: "Quarto do João",
-        fundo: "../assets.game/background/Quarto_do_Joao_com_cartao.png",
+        fundo: "../assets/game/background/Quarto_do_Joao_com_cartao.png",
         get colisoes() { return gerarColisoesMapa3(); },
         inimigos: [],
         portas: [
@@ -625,12 +625,12 @@ function desenharPortas() {
     ctx.fillStyle = "yellow";
     ctx.font = "14px Arial";
     ctx.textAlign = "left";
-    ctx.fillText(p.label, p.x, p.y - 12);
+    ctx.fillText(p.label, p.x, p.y - 12);          
 }
 
 // SPRITE DO JOGADOR
 const spriteJogador = new Image();
-spriteJogador.src = "../assets.game/sprites/player/personagem.png";
+spriteJogador.src = "../assets/game/sprites/player/andando/personagem.png";
 
 function desenharJogador() {
     if (jogador.parryAtivo) {
@@ -657,16 +657,18 @@ function desenharJogador() {
         );
     }
 
-    if (jogador.invencivel &&
-        Math.floor(Date.now() / 80) % 2 === 0) return;
+    if (
+        jogador.invencivel &&
+        Math.floor(Date.now() / 80) % 2 === 0
+    ) return;
 
     ctx.drawImage(
-        spriteJogador,
-        jogador.x,
-        jogador.y,
-        jogador.largura,
-        jogador.altura
-    );
+    spriteJogador,
+    jogador.x,
+    jogador.y,
+    jogador.largura,
+    jogador.altura
+);
 }
 
 function desenharInimigos() {
