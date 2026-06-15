@@ -68,20 +68,25 @@ function px(xPct, yPct, wPct, hPct) {
 }
 
 // --------------------------------
+// TAMANHO DO SPRITE
+// Mude aqui para ajustar o tamanho visual do personagem na tela
+// --------------------------------
+const SPRITE_W = 50;
+const SPRITE_H = 50;
+
+// --------------------------------
 // JOGADOR
-// ── CORREÇÃO: adicionados frame e direcao que estavam faltando ──
 // --------------------------------
 
 const jogador = {
     x: 0, y: 0,
-    largura: 80, altura: 80,
+    largura: 64, altura: 64,
     velocidade: 3,
     vida: 100, vidaMax: 100,
     cor: "#00aaff",
 
-    // Animação do sprite
-    frame: 0,       // coluna no spritesheet (0–3)
-    direcao: 0,     // linha no spritesheet (0=baixo, 1=cima, 2=esq, 3=dir)
+    frame: 0,
+    direcao: 0,
 
     atacando: false,
     tempoAtaque: 0,
@@ -121,7 +126,6 @@ function desenharEfeitos() {
 
 // --------------------------------
 // TECLAS
-// ── CORREÇÃO: removido bloco solto que causava ReferenceError ──
 // --------------------------------
 
 const teclas = {};
@@ -288,7 +292,7 @@ const MAPAS = [
                 get altura()  { return canvas.height * 0.40; },
                 label: "[E] Recepção",
                 destinoMapa: 0,
-                destinoXPct: 0.48, destinoYPct: 0.88,
+                destinoXPct: 0.48, destinoYPct: 0.75,
             },
             {
                 get x()       { return canvas.width  * 0.89; },
@@ -381,15 +385,12 @@ function carregarMapa(idx, xPct, yPct) {
 
 // --------------------------------
 // MOVIMENTAÇÃO COM COLISÃO
-// ── CORREÇÃO: direção atualizada aqui, onde nx/ny existem ──
 // --------------------------------
 
 function moverJogador() {
     const cols = MAPAS[mapaAtualIdx].colisoes;
     let nx = jogador.x, ny = jogador.y;
 
-    // Direções batem com as linhas do spritesheet:
-    // 0 = baixo (frente) | 1 = cima (costas) | 2 = esquerda | 3 = direita
     if (teclas["w"] || teclas["W"] || teclas["ArrowUp"])    { ny -= jogador.velocidade; jogador.direcao = 1; }
     if (teclas["s"] || teclas["S"] || teclas["ArrowDown"])  { ny += jogador.velocidade; jogador.direcao = 0; }
     if (teclas["a"] || teclas["A"] || teclas["ArrowLeft"])  { nx -= jogador.velocidade; jogador.direcao = 2; }
@@ -555,7 +556,7 @@ function atualizarCooldowns() {
 // --------------------------------
 
 let contadorAnimacao = 0;
-const VELOCIDADE_ANI = 10; // troca de frame a cada 10 ticks (~167ms a 60fps)
+const VELOCIDADE_ANI = 10;
 
 function atualizarAnimacao() {
     const andando =
@@ -621,17 +622,15 @@ function desenharPortas() {
     ctx.fillText(p.label, p.x, p.y - 12);
 }
 
-// ── Sprite do jogador ──
 // Spritesheet 1254x1254 → 4 colunas x 4 linhas = 313x313px por frame
 // Linha 0=baixo | 1=cima | 2=esquerda | 3=direita
 const FRAME_W = 313;
 const FRAME_H = 313;
 
 const spriteJogador = new Image();
-let spriteProcessado = null; // versão sem fundo branco
+let spriteProcessado = null;
 
 spriteJogador.onload = () => {
-    // Remove o fundo branco uma única vez ao carregar
     const off = document.createElement("canvas");
     off.width  = spriteJogador.width;
     off.height = spriteJogador.height;
@@ -641,8 +640,6 @@ spriteJogador.onload = () => {
     const d = imgData.data;
     for (let i = 0; i < d.length; i += 4) {
         const r = d[i], g = d[i+1], b = d[i+2];
-        // Xadrez (cinza claro) e branco → transparente
-        // O padrão xadrez do PNG tem ~190-255 de brilho em R,G,B
         const brilho = (r + g + b) / 3;
         const saturacao = Math.max(r,g,b) - Math.min(r,g,b);
         if (brilho > 180 && saturacao < 30) d[i+3] = 0;
@@ -653,26 +650,27 @@ spriteJogador.onload = () => {
 spriteJogador.src = "../assets/game/sprites/player/andando/personagem.png";
 
 function desenharJogador() {
+    // Centro da hitbox do jogador
+    const cx = jogador.x + jogador.largura  / 2;
+    const cy = jogador.y + jogador.altura   / 2;
+
+    // Posição de desenho centralizada no jogador
+    const dstX = cx - SPRITE_W / 2;
+    const dstY = cy - SPRITE_H / 2;
+
     // Anel de parry
     if (jogador.parryAtivo) {
         ctx.strokeStyle = "#00ffff";
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.arc(
-            jogador.x + jogador.largura / 2,
-            jogador.y + jogador.altura / 2,
-            30, 0, Math.PI * 2
-        );
+        ctx.arc(cx, cy, 30, 0, Math.PI * 2);
         ctx.stroke();
     }
 
     // Flash de ataque
     if (jogador.tempoAniAtaque > 0) {
         ctx.fillStyle = "rgba(255,255,0,0.20)";
-        ctx.fillRect(
-            jogador.x - 30, jogador.y - 30,
-            jogador.largura + 60, jogador.altura + 60
-        );
+        ctx.fillRect(dstX - 20, dstY - 20, SPRITE_W + 40, SPRITE_H + 40);
     }
 
     // Pisca quando invencível
@@ -680,17 +678,13 @@ function desenharJogador() {
 
     const fonte = spriteProcessado || (spriteJogador.complete && spriteJogador.naturalWidth > 0 ? spriteJogador : null);
     if (fonte) {
-        // Desenha exatamente 1 frame (313x313) na posição da hitbox
-        // centralizado: desloca metade da diferença entre frame e hitbox
-        const dstX = jogador.x - (FRAME_W - jogador.largura) / 2;
-        const dstY = jogador.y - (FRAME_H - jogador.altura)  / 2;
         ctx.drawImage(
             fonte,
             jogador.frame   * FRAME_W,
             jogador.direcao * FRAME_H,
             FRAME_W, FRAME_H,
             dstX, dstY,
-            FRAME_W, FRAME_H
+            SPRITE_W, SPRITE_H
         );
     } else {
         ctx.fillStyle = jogador.cor;
@@ -760,7 +754,7 @@ function update() {
     atualizarFade();
     if (pausado || transicionando) return;
     moverJogador();
-    atualizarAnimacao();   // ── CORREÇÃO: estava faltando no update ──
+    atualizarAnimacao();
     atualizarInimigos();
     atualizarCooldowns();
     atualizarEfeitos();
@@ -786,5 +780,5 @@ function loop() { update(); draw(); requestAnimationFrame(loop); }
 // --------------------------------
 // INICIAR
 // --------------------------------
-carregarMapa(0, 0.48, 0.88);
+carregarMapa(0, 0.48, 0.75);
 loop();
