@@ -71,8 +71,8 @@ function px(xPct, yPct, wPct, hPct) {
 // TAMANHO DO SPRITE
 // Mude aqui para ajustar o tamanho visual do personagem na tela
 // --------------------------------
-const SPRITE_W = 50;
-const SPRITE_H = 50;
+const SPRITE_W = 64;
+const SPRITE_H = 64;
 
 // --------------------------------
 // JOGADOR
@@ -389,12 +389,37 @@ function carregarMapa(idx, xPct, yPct) {
 
 function moverJogador() {
     const cols = MAPAS[mapaAtualIdx].colisoes;
-    let nx = jogador.x, ny = jogador.y;
 
-    if (teclas["w"] || teclas["W"] || teclas["ArrowUp"])    { ny -= jogador.velocidade; jogador.direcao = 1; }
-    if (teclas["s"] || teclas["S"] || teclas["ArrowDown"])  { ny += jogador.velocidade; jogador.direcao = 0; }
-    if (teclas["a"] || teclas["A"] || teclas["ArrowLeft"])  { nx -= jogador.velocidade; jogador.direcao = 2; }
-    if (teclas["d"] || teclas["D"] || teclas["ArrowRight"]) { nx += jogador.velocidade; jogador.direcao = 3; }
+    // Lê as teclas pressionadas em cada eixo
+    const cima    = teclas["w"] || teclas["W"] || teclas["ArrowUp"];
+    const baixo   = teclas["s"] || teclas["S"] || teclas["ArrowDown"];
+    const esquerda= teclas["a"] || teclas["A"] || teclas["ArrowLeft"];
+    const direita = teclas["d"] || teclas["D"] || teclas["ArrowRight"];
+
+    // Vetor de movimento (-1, 0 ou 1 em cada eixo)
+    let dx = 0, dy = 0;
+    if (cima)     dy -= 1;
+    if (baixo)    dy += 1;
+    if (esquerda) dx -= 1;
+    if (direita)  dx += 1;
+
+    // Normaliza a diagonal para não andar mais rápido (dx=dy=1 teria magnitude √2)
+    if (dx !== 0 && dy !== 0) {
+        const fator = Math.SQRT1_2; // 1/√2
+        dx *= fator;
+        dy *= fator;
+    }
+
+    // Direção visual do sprite: prioriza o último eixo pressionado,
+    // mas como não há sprite diagonal, usa horizontal se houver,
+    // senão usa vertical
+    if (dx < 0)      jogador.direcao = 2; // esquerda
+    else if (dx > 0) jogador.direcao = 3; // direita
+    else if (dy < 0) jogador.direcao = 1; // cima
+    else if (dy > 0) jogador.direcao = 0; // baixo
+
+    const nx = jogador.x + dx * jogador.velocidade;
+    const ny = jogador.y + dy * jogador.velocidade;
 
     const testX = { x: nx, y: jogador.y, largura: jogador.largura, altura: jogador.altura };
     const testY = { x: jogador.x, y: ny, largura: jogador.largura, altura: jogador.altura };
@@ -569,7 +594,7 @@ function atualizarAnimacao() {
         contadorAnimacao++;
         if (contadorAnimacao >= VELOCIDADE_ANI) {
             contadorAnimacao = 0;
-            jogador.frame = (jogador.frame + 1) % 4;
+            jogador.frame = (jogador.frame + 1) % TOTAL_FRAMES;
         }
     } else {
         jogador.frame = 0;
@@ -622,31 +647,14 @@ function desenharPortas() {
     ctx.fillText(p.label, p.x, p.y - 12);
 }
 
-// Spritesheet 1254x1254 → 4 colunas x 4 linhas = 313x313px por frame
-// Linha 0=baixo | 1=cima | 2=esquerda | 3=direita
-const FRAME_W = 313;
-const FRAME_H = 313;
+// Spritesheet 1254x1254 → 6 colunas x 6 linhas = 209x209px por frame
+// Linha 0=baixo | 1=cima | 2=esquerda | 3=direita (linhas 4 e 5 repetem)
+// (Fundo já vem transparente no PNG, sem necessidade de processamento)
+const FRAME_W = 209;
+const FRAME_H = 209;
+const TOTAL_FRAMES = 6; // frames de animação por direção
 
 const spriteJogador = new Image();
-let spriteProcessado = null;
-
-spriteJogador.onload = () => {
-    const off = document.createElement("canvas");
-    off.width  = spriteJogador.width;
-    off.height = spriteJogador.height;
-    const octx = off.getContext("2d");
-    octx.drawImage(spriteJogador, 0, 0);
-    const imgData = octx.getImageData(0, 0, off.width, off.height);
-    const d = imgData.data;
-    for (let i = 0; i < d.length; i += 4) {
-        const r = d[i], g = d[i+1], b = d[i+2];
-        const brilho = (r + g + b) / 3;
-        const saturacao = Math.max(r,g,b) - Math.min(r,g,b);
-        if (brilho > 180 && saturacao < 30) d[i+3] = 0;
-    }
-    octx.putImageData(imgData, 0, 0);
-    spriteProcessado = off;
-};
 spriteJogador.src = "../assets/game/sprites/player/andando/personagem.png";
 
 function desenharJogador() {
@@ -676,10 +684,9 @@ function desenharJogador() {
     // Pisca quando invencível
     if (jogador.invencivel && Math.floor(Date.now() / 80) % 2 === 0) return;
 
-    const fonte = spriteProcessado || (spriteJogador.complete && spriteJogador.naturalWidth > 0 ? spriteJogador : null);
-    if (fonte) {
+    if (spriteJogador.complete && spriteJogador.naturalWidth > 0) {
         ctx.drawImage(
-            fonte,
+            spriteJogador,
             jogador.frame   * FRAME_W,
             jogador.direcao * FRAME_H,
             FRAME_W, FRAME_H,
