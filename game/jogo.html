@@ -34,7 +34,18 @@
 
     </div>
 
-    <script src="game.js"></script>
+    <!--
+        ORDEM DOS SCRIPTS IMPORTA!
+        Cada arquivo depende de variáveis/funções definidas nos anteriores.
+        Sequência: core -> player -> enemies -> maps -> ui -> render -> main
+    -->
+    <script src="js/core/core.js"></script>
+    <script src="js/player/player.js"></script>
+    <script src="js/enemies/enemies.js"></script>
+    <script src="js/maps/maps.js"></script>
+    <script src="js/ui/ui.js"></script>
+    <script src="js/render/render.js"></script>
+    <script src="js/main/main.js"></script>
 
 </body>
 

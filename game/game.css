@@ -5,7 +5,8 @@
 }
 
 body{
-    background-image: url("/assets.game/background/Corredor_da_saida.png");
+    background-image: url("../assets/game/background/CorredorBoss.png");
+    background-size: cover;
 }
 
 /* Canvas */
