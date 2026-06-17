@@ -39,6 +39,7 @@ function atualizarInimigos() {
                 adicionarEfeito(ini.x + 14, ini.y - 10, "PARRY +40!", "#00ffff");
                 if (ini.vida <= 0) {
                     adicionarEfeito(ini.x + 14, ini.y - 20, "MORTO", "orange");
+                    marcarInimigoDerrotado(ini._idxOriginal);
                     inimigosAtivos.splice(i, 1);
                 }
                 ini.tempoDano = 40;

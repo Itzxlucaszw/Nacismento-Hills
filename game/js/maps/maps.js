@@ -118,7 +118,7 @@ const MAPAS = [
                 get altura()  { return canvas.height * 0.40; },
                 label: "[E] Recepção",
                 destinoMapa: 0,
-                destinoXPct: 0.48, destinoYPct: 0.75,
+                destinoXPct: 0.48, destinoYPct: 0.20,
             },
             {
                 get x()       { return canvas.width  * 0.89; },
